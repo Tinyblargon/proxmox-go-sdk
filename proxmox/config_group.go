@@ -19,7 +19,7 @@ type ConfigGroup struct {
 func (config *ConfigGroup) Create(client *Client) error {
 	config.Validate(true)
 	params := config.mapToApiValues(true)
-	err := client.Post(params, "/access/groups")
+	err := client.post(params, "/access/groups")
 	if err != nil {
 		params, _ := json.Marshal(&params)
 		return fmt.Errorf("error creating Group: %v, (params: %v)", err, string(params))
@@ -82,7 +82,7 @@ func (config *ConfigGroup) Set(client *Client) (err error) {
 func (config *ConfigGroup) Update(client *Client) error {
 	config.Validate(false)
 	params := config.mapToApiValues(true)
-	err := client.Put(params, "/access/groups/"+string(config.Name))
+	err := client.put(params, "/access/groups/"+string(config.Name))
 	if err != nil {
 		params, _ := json.Marshal(&params)
 		return fmt.Errorf("error updating Group: %v, (params: %v)", err, string(params))
@@ -177,7 +177,7 @@ func (group GroupName) Delete(client *Client) (err error) {
 	if err != nil {
 		return
 	}
-	return client.Delete("/access/groups/" + string(group))
+	return client.delete("/access/groups/" + string(group))
 }
 
 func (group GroupName) inArray(groups []GroupName) bool {
@@ -396,7 +396,7 @@ func ListGroups(client *Client) (*[]ConfigGroup, error) {
 
 // list all groups directly from the api without any extra formatting
 func listGroups(client *Client) ([]interface{}, error) {
-	return client.GetItemListInterfaceArray("/access/groups")
+	return client.getItemListInterfaceArray("/access/groups")
 }
 
 func NewConfigGroupFromApi(groupId GroupName, client *Client) (*ConfigGroup, error) {
@@ -404,7 +404,7 @@ func NewConfigGroupFromApi(groupId GroupName, client *Client) (*ConfigGroup, err
 	if err != nil {
 		return nil, err
 	}
-	config, err := client.GetItemConfigMapStringInterface("/access/groups/"+string(groupId), "group", "CONFIG")
+	config, err := client.getItemConfigMapStringInterface("/access/groups/"+string(groupId), "group", "CONFIG")
 	if err != nil {
 		return nil, err
 	}

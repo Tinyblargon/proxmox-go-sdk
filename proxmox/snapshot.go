@@ -26,7 +26,7 @@ func (config ConfigSnapshot) CreateSnapshot(c *Client, vmr *VmRef) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = c.PostWithTask(params, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/")
+	_, err = c.postWithTask(params, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/")
 	if err != nil {
 		params, _ := json.Marshal(&params)
 		return fmt.Errorf("error creating Snapshot: %v, (params: %v)", err, string(params))
@@ -41,7 +41,7 @@ func ListSnapshots(c *Client, vmr *VmRef) (rawSnapshots, error) {
 	if err != nil {
 		return nil, err
 	}
-	return c.GetItemConfigInterfaceArray("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/", "Guest", "SNAPSHOTS")
+	return c.getItemConfigInterfaceArray("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/", "Guest", "SNAPSHOTS")
 }
 
 // Can only be used to update the description of an already existing snapshot
@@ -50,7 +50,7 @@ func UpdateSnapshotDescription(c *Client, vmr *VmRef, snapshot, description stri
 	if err != nil {
 		return
 	}
-	return c.Put(map[string]interface{}{"description": description}, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+snapshot+"/config")
+	return c.put(map[string]interface{}{"description": description}, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+snapshot+"/config")
 }
 
 func DeleteSnapshot(c *Client, vmr *VmRef, snapshot string) (exitStatus string, err error) {
@@ -58,7 +58,7 @@ func DeleteSnapshot(c *Client, vmr *VmRef, snapshot string) (exitStatus string, 
 	if err != nil {
 		return
 	}
-	return c.DeleteWithTask("/nodes/" + vmr.node + "/" + vmr.vmType + "/" + strconv.Itoa(vmr.vmId) + "/snapshot/" + snapshot)
+	return c.deleteWithTask("/nodes/" + vmr.node + "/" + vmr.vmType + "/" + strconv.Itoa(vmr.vmId) + "/snapshot/" + snapshot)
 }
 
 func RollbackSnapshot(c *Client, vmr *VmRef, snapshot string) (exitStatus string, err error) {
@@ -66,7 +66,7 @@ func RollbackSnapshot(c *Client, vmr *VmRef, snapshot string) (exitStatus string
 	if err != nil {
 		return
 	}
-	return c.PostWithTask(nil, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+snapshot+"/rollback")
+	return c.postWithTask(nil, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+snapshot+"/rollback")
 }
 
 // Used for formatting the output when retrieving snapshots

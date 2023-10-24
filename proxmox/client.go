@@ -135,7 +135,7 @@ func (c *Client) GetVersion() (data map[string]interface{}, err error) {
 	return ResponseJSON(resp)
 }
 
-func (c *Client) GetJsonRetryable(url string, data *map[string]interface{}, tries int) error {
+func (c *Client) getJsonRetryable(url string, data *map[string]interface{}, tries int) error {
 	var statErr error
 	for ii := 0; ii < tries; ii++ {
 		_, statErr = c.session.GetJSON(url, nil, nil, data)
@@ -152,7 +152,7 @@ func (c *Client) GetJsonRetryable(url string, data *map[string]interface{}, trie
 }
 
 func (c *Client) GetNodeList() (list map[string]interface{}, err error) {
-	err = c.GetJsonRetryable("/nodes", &list, 3)
+	err = c.getJsonRetryable("/nodes", &list, 3)
 	return
 }
 
@@ -167,7 +167,7 @@ func (c *Client) GetResourceList(resourceType string) (list []interface{}, err e
 	if resourceType != "" {
 		url = url + "?type=" + resourceType
 	}
-	return c.GetItemListInterfaceArray(url)
+	return c.getItemListInterfaceArray(url)
 }
 
 // TODO deprecate once nothing uses this anymore, use ListGuests() instead
@@ -249,7 +249,7 @@ func (c *Client) GetVmState(vmr *VmRef) (vmState map[string]interface{}, err err
 	if err != nil {
 		return nil, err
 	}
-	return c.GetItemConfigMapStringInterface("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/status/current", "vm", "STATE")
+	return c.getItemConfigMapStringInterface("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/status/current", "vm", "STATE")
 }
 
 func (c *Client) GetVmConfig(vmr *VmRef) (vmConfig map[string]interface{}, err error) {
@@ -257,7 +257,7 @@ func (c *Client) GetVmConfig(vmr *VmRef) (vmConfig map[string]interface{}, err e
 	if err != nil {
 		return nil, err
 	}
-	return c.GetItemConfigMapStringInterface("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/config", "vm", "CONFIG")
+	return c.getItemConfigMapStringInterface("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/config", "vm", "CONFIG")
 }
 
 func (c *Client) GetStorageStatus(vmr *VmRef, storageName string) (storageStatus map[string]interface{}, err error) {
@@ -267,7 +267,7 @@ func (c *Client) GetStorageStatus(vmr *VmRef, storageName string) (storageStatus
 	}
 	var data map[string]interface{}
 	url := fmt.Sprintf("/nodes/%s/storage/%s/status", vmr.node, storageName)
-	err = c.GetJsonRetryable(url, &data, 3)
+	err = c.getJsonRetryable(url, &data, 3)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +284,7 @@ func (c *Client) GetStorageContent(vmr *VmRef, storageName string) (data map[str
 		return nil, err
 	}
 	url := fmt.Sprintf("/nodes/%s/storage/%s/content", vmr.node, storageName)
-	err = c.GetJsonRetryable(url, &data, 3)
+	err = c.getJsonRetryable(url, &data, 3)
 	if err != nil {
 		return nil, err
 	}
@@ -475,7 +475,7 @@ func (c *Client) StatusChangeVm(vmr *VmRef, params map[string]interface{}, setSt
 	}
 	url := fmt.Sprintf("/nodes/%s/%s/%d/status/%s", vmr.node, vmr.vmType, vmr.vmId, setStatus)
 	for i := 0; i < 3; i++ {
-		exitStatus, err = c.PostWithTask(params, url)
+		exitStatus, err = c.postWithTask(params, url)
 		if err != nil {
 			time.Sleep(TaskStatusCheckInterval * time.Second)
 		} else {
@@ -712,7 +712,7 @@ func (c *Client) RollbackQemuVm(vmr *VmRef, snapshot string) (exitStatus string,
 
 // DEPRECATED SetVmConfig - send config options
 func (c *Client) SetVmConfig(vmr *VmRef, params map[string]interface{}) (exitStatus interface{}, err error) {
-	return c.PostWithTask(params, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/config")
+	return c.postWithTask(params, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/config")
 }
 
 // SetLxcConfig - send config options
@@ -1128,7 +1128,7 @@ func (c *Client) GetExecStatus(vmr *VmRef, pid string) (status map[string]interf
 	if err != nil {
 		return nil, err
 	}
-	err = c.GetJsonRetryable(fmt.Sprintf("/nodes/%s/%s/%d/agent/exec-status?pid=%s", vmr.node, vmr.vmType, vmr.vmId, pid), &status, 3)
+	err = c.getJsonRetryable(fmt.Sprintf("/nodes/%s/%s/%d/agent/exec-status?pid=%s", vmr.node, vmr.vmType, vmr.vmId, pid), &status, 3)
 	if err == nil {
 		status = status["data"].(map[string]interface{})
 	}
@@ -1511,7 +1511,7 @@ func (c *Client) UpdateVMPool(vmr *VmRef, pool string) (exitStatus interface{}, 
 func (c *Client) ReadVMHA(vmr *VmRef) (err error) {
 	var list map[string]interface{}
 	url := fmt.Sprintf("/cluster/ha/resources/%d", vmr.vmId)
-	err = c.GetJsonRetryable(url, &list, 3)
+	err = c.getJsonRetryable(url, &list, 3)
 	if err == nil {
 		list = list["data"].(map[string]interface{})
 		for elem, value := range list {
@@ -1595,29 +1595,29 @@ func (c *Client) UpdateVMHA(vmr *VmRef, haState string, haGroup string) (exitSta
 }
 
 func (c *Client) GetPoolList() (pools map[string]interface{}, err error) {
-	return c.GetItemList("/pools")
+	return c.getItemList("/pools")
 }
 
 func (c *Client) GetPoolInfo(poolid string) (poolInfo map[string]interface{}, err error) {
-	return c.GetItemConfigMapStringInterface("/pools/"+poolid, "pool", "CONFIG")
+	return c.getItemConfigMapStringInterface("/pools/"+poolid, "pool", "CONFIG")
 }
 
 func (c *Client) CreatePool(poolid string, comment string) error {
-	return c.Post(map[string]interface{}{
+	return c.post(map[string]interface{}{
 		"poolid":  poolid,
 		"comment": comment,
 	}, "/pools")
 }
 
 func (c *Client) UpdatePoolComment(poolid string, comment string) error {
-	return c.Put(map[string]interface{}{
+	return c.put(map[string]interface{}{
 		"poolid":  poolid,
 		"comment": comment,
 	}, "/pools/"+poolid)
 }
 
 func (c *Client) DeletePool(poolid string) error {
-	return c.Delete("/pools/" + poolid)
+	return c.delete("/pools/" + poolid)
 }
 
 // permissions check
@@ -1629,7 +1629,7 @@ func (c *Client) GetUserPermissions(id UserID, path string) (permissions []strin
 	if !existence {
 		return nil, fmt.Errorf("cannot get user (%s) permissions, the user does not exist", id)
 	}
-	permlist, err := c.GetItemList("/access/permissions?userid=" + id.ToString() + "&path=" + path)
+	permlist, err := c.getItemList("/access/permissions?userid=" + id.ToString() + "&path=" + path)
 	failError(err)
 	data := permlist["data"].(map[string]interface{})
 	for pth, prm := range data {
@@ -1645,7 +1645,7 @@ func (c *Client) GetUserPermissions(id UserID, path string) (permissions []strin
 
 // ACME
 func (c *Client) GetAcmeDirectoriesUrl() (url []string, err error) {
-	config, err := c.GetItemConfigInterfaceArray("/cluster/acme/directories", "Acme directories", "CONFIG")
+	config, err := c.getItemConfigInterfaceArray("/cluster/acme/directories", "Acme directories", "CONFIG")
 	url = make([]string, len(config))
 	for i, element := range config {
 		url[i] = element.(map[string]interface{})["url"].(string)
@@ -1654,48 +1654,48 @@ func (c *Client) GetAcmeDirectoriesUrl() (url []string, err error) {
 }
 
 func (c *Client) GetAcmeTosUrl() (url string, err error) {
-	return c.GetItemConfigString("/cluster/acme/tos", "Acme T.O.S.", "CONFIG")
+	return c.getItemConfigString("/cluster/acme/tos", "Acme T.O.S.", "CONFIG")
 }
 
 // ACME Account
 func (c *Client) GetAcmeAccountList() (accounts map[string]interface{}, err error) {
-	return c.GetItemList("/cluster/acme/account")
+	return c.getItemList("/cluster/acme/account")
 }
 
 func (c *Client) GetAcmeAccountConfig(id string) (config map[string]interface{}, err error) {
-	return c.GetItemConfigMapStringInterface("/cluster/acme/account/"+id, "acme", "CONFIG")
+	return c.getItemConfigMapStringInterface("/cluster/acme/account/"+id, "acme", "CONFIG")
 }
 
 func (c *Client) CreateAcmeAccount(params map[string]interface{}) (exitStatus string, err error) {
-	return c.PostWithTask(params, "/cluster/acme/account/")
+	return c.postWithTask(params, "/cluster/acme/account/")
 }
 
 func (c *Client) UpdateAcmeAccountEmails(id, emails string) (exitStatus string, err error) {
 	params := map[string]interface{}{
 		"contact": emails,
 	}
-	return c.PutWithTask(params, "/cluster/acme/account/"+id)
+	return c.putWithTask(params, "/cluster/acme/account/"+id)
 }
 
 func (c *Client) DeleteAcmeAccount(id string) (exitStatus string, err error) {
-	return c.DeleteWithTask("/cluster/acme/account/" + id)
+	return c.deleteWithTask("/cluster/acme/account/" + id)
 }
 
 // ACME Plugin
 func (c *Client) GetAcmePluginList() (accounts map[string]interface{}, err error) {
-	return c.GetItemList("/cluster/acme/plugins")
+	return c.getItemList("/cluster/acme/plugins")
 }
 
 func (c *Client) GetAcmePluginConfig(id string) (config map[string]interface{}, err error) {
-	return c.GetItemConfigMapStringInterface("/cluster/acme/plugins/"+id, "acme plugin", "CONFIG")
+	return c.getItemConfigMapStringInterface("/cluster/acme/plugins/"+id, "acme plugin", "CONFIG")
 }
 
 func (c *Client) CreateAcmePlugin(params map[string]interface{}) error {
-	return c.Post(params, "/cluster/acme/plugins/")
+	return c.post(params, "/cluster/acme/plugins/")
 }
 
 func (c *Client) UpdateAcmePlugin(id string, params map[string]interface{}) error {
-	return c.Put(params, "/cluster/acme/plugins/"+id)
+	return c.put(params, "/cluster/acme/plugins/"+id)
 }
 
 func (c *Client) CheckAcmePluginExistence(id string) (existance bool, err error) {
@@ -1705,24 +1705,24 @@ func (c *Client) CheckAcmePluginExistence(id string) (existance bool, err error)
 }
 
 func (c *Client) DeleteAcmePlugin(id string) (err error) {
-	return c.Delete("/cluster/acme/plugins/" + id)
+	return c.delete("/cluster/acme/plugins/" + id)
 }
 
 // Metrics
 func (c *Client) GetMetricServerConfig(id string) (config map[string]interface{}, err error) {
-	return c.GetItemConfigMapStringInterface("/cluster/metrics/server/"+id, "metrics server", "CONFIG")
+	return c.getItemConfigMapStringInterface("/cluster/metrics/server/"+id, "metrics server", "CONFIG")
 }
 
 func (c *Client) GetMetricsServerList() (metricServers map[string]interface{}, err error) {
-	return c.GetItemList("/cluster/metrics/server")
+	return c.getItemList("/cluster/metrics/server")
 }
 
 func (c *Client) CreateMetricServer(id string, params map[string]interface{}) error {
-	return c.Post(params, "/cluster/metrics/server/"+id)
+	return c.post(params, "/cluster/metrics/server/"+id)
 }
 
 func (c *Client) UpdateMetricServer(id string, params map[string]interface{}) error {
-	return c.Put(params, "/cluster/metrics/server/"+id)
+	return c.put(params, "/cluster/metrics/server/"+id)
 }
 
 func (c *Client) CheckMetricServerExistence(id string) (existance bool, err error) {
@@ -1732,26 +1732,26 @@ func (c *Client) CheckMetricServerExistence(id string) (existance bool, err erro
 }
 
 func (c *Client) DeleteMetricServer(id string) error {
-	return c.Delete("/cluster/metrics/server/" + id)
+	return c.delete("/cluster/metrics/server/" + id)
 }
 
 // storage
 func (c *Client) EnableStorage(id string) error {
-	return c.Put(map[string]interface{}{
+	return c.put(map[string]interface{}{
 		"disable": false,
 	}, "/storage/"+id)
 }
 
 func (c *Client) GetStorageList() (metricServers map[string]interface{}, err error) {
-	return c.GetItemList("/storage")
+	return c.getItemList("/storage")
 }
 
 func (c *Client) GetStorageConfig(id string) (config map[string]interface{}, err error) {
-	return c.GetItemConfigMapStringInterface("/storage/"+id, "storage", "CONFIG")
+	return c.getItemConfigMapStringInterface("/storage/"+id, "storage", "CONFIG")
 }
 
 func (c *Client) CreateStorage(params map[string]interface{}) error {
-	return c.Post(params, "/storage")
+	return c.post(params, "/storage")
 }
 
 func (c *Client) CheckStorageExistance(id string) (existance bool, err error) {
@@ -1761,11 +1761,11 @@ func (c *Client) CheckStorageExistance(id string) (existance bool, err error) {
 }
 
 func (c *Client) UpdateStorage(id string, params map[string]interface{}) error {
-	return c.Put(params, "/storage/"+id)
+	return c.put(params, "/storage/"+id)
 }
 
 func (c *Client) DeleteStorage(id string) error {
-	return c.Delete("/storage/" + id)
+	return c.delete("/storage/" + id)
 }
 
 // Network
@@ -1780,7 +1780,7 @@ func (c *Client) GetNetworkList(node string, typeFilter string) (exitStatus stri
 		url += fmt.Sprintf("?type=%s", typeFilter)
 	}
 	resp, err := c.session.Get(url, nil, nil)
-	exitStatus = c.HandleTaskError(resp)
+	exitStatus = c.handleTaskError(resp)
 	return
 }
 
@@ -1790,7 +1790,7 @@ func (c *Client) GetNetworkList(node string, typeFilter string) (exitStatus stri
 func (c *Client) GetNetworkInterface(node string, iface string) (exitStatus string, err error) {
 	url := fmt.Sprintf("/nodes/%s/network/%s", node, iface)
 	resp, err := c.session.Get(url, nil, nil)
-	exitStatus = c.HandleTaskError(resp)
+	exitStatus = c.handleTaskError(resp)
 	return
 }
 
@@ -1799,7 +1799,7 @@ func (c *Client) GetNetworkInterface(node string, iface string) (exitStatus stri
 // It returns the body from the API response and any HTTP error the API returns.
 func (c *Client) CreateNetwork(node string, params map[string]interface{}) (exitStatus string, err error) {
 	url := fmt.Sprintf("/nodes/%s/network", node)
-	return c.CreateItemReturnStatus(params, url)
+	return c.createItemReturnStatus(params, url)
 }
 
 // UpdateNetwork updates the network corresponding to the passed in interface name on the passed
@@ -1807,7 +1807,7 @@ func (c *Client) CreateNetwork(node string, params map[string]interface{}) (exit
 // It returns the body from the API response and any HTTP error the API returns.
 func (c *Client) UpdateNetwork(node string, iface string, params map[string]interface{}) (exitStatus string, err error) {
 	url := fmt.Sprintf("/nodes/%s/network/%s", node, iface)
-	return c.UpdateItemReturnStatus(params, url)
+	return c.updateItemReturnStatus(params, url)
 }
 
 // DeleteNetwork deletes the network with the passed in iface name on the passed in node.
@@ -1815,7 +1815,7 @@ func (c *Client) UpdateNetwork(node string, iface string, params map[string]inte
 func (c *Client) DeleteNetwork(node string, iface string) (exitStatus string, err error) {
 	url := fmt.Sprintf("/nodes/%s/network/%s", node, iface)
 	resp, err := c.session.Delete(url, nil, nil)
-	exitStatus = c.HandleTaskError(resp)
+	exitStatus = c.handleTaskError(resp)
 	return
 }
 
@@ -1823,27 +1823,27 @@ func (c *Client) DeleteNetwork(node string, iface string) (exitStatus string, er
 // It returns the body from the API response and any HTTP error the API returns.
 func (c Client) ApplyNetwork(node string) (exitStatus string, err error) {
 	url := fmt.Sprintf("/nodes/%s/network", node)
-	return c.PutWithTask(nil, url)
+	return c.putWithTask(nil, url)
 }
 
 // RevertNetwork reverts the pending network configuration on the passed in node.
 // It returns the body from the API response and any HTTP error the API returns.
 func (c *Client) RevertNetwork(node string) (exitStatus string, err error) {
 	url := fmt.Sprintf("/nodes/%s/network", node)
-	return c.DeleteWithTask(url)
+	return c.deleteWithTask(url)
 }
 
 // SDN
 
 func (c *Client) ApplySDN() (string, error) {
-	return c.PutWithTask(nil, "/cluster/sdn")
+	return c.putWithTask(nil, "/cluster/sdn")
 }
 
 // GetSDNVNets returns a list of all VNet definitions in the "data" element of the returned
 // map.
 func (c *Client) GetSDNVNets(pending bool) (list map[string]interface{}, err error) {
 	url := fmt.Sprintf("/cluster/sdn/vnets?pending=%d", Btoi(pending))
-	err = c.GetJsonRetryable(url, &list, 3)
+	err = c.getJsonRetryable(url, &list, 3)
 	return
 }
 
@@ -1859,30 +1859,30 @@ func (c *Client) CheckSDNVNetExistance(id string) (existance bool, err error) {
 // The returned zone can be unmarshalled into a ConfigSDNVNet struct.
 func (c *Client) GetSDNVNet(name string) (dns map[string]interface{}, err error) {
 	url := fmt.Sprintf("/cluster/sdn/vnets/%s", name)
-	err = c.GetJsonRetryable(url, &dns, 3)
+	err = c.getJsonRetryable(url, &dns, 3)
 	return
 }
 
 // CreateSDNVNet creates a new SDN DNS in the cluster
 func (c *Client) CreateSDNVNet(params map[string]interface{}) error {
-	return c.Post(params, "/cluster/sdn/vnets")
+	return c.post(params, "/cluster/sdn/vnets")
 }
 
 // DeleteSDNVNet deletes an existing SDN DNS in the cluster
 func (c *Client) DeleteSDNVNet(name string) error {
-	return c.Delete(fmt.Sprintf("/cluster/sdn/vnets/%s", name))
+	return c.delete(fmt.Sprintf("/cluster/sdn/vnets/%s", name))
 }
 
 // UpdateSDNVNet updates the given DNS with the provided parameters
 func (c *Client) UpdateSDNVNet(id string, params map[string]interface{}) error {
-	return c.Put(params, "/cluster/sdn/vnets/"+id)
+	return c.put(params, "/cluster/sdn/vnets/"+id)
 }
 
 // GetSDNSubnets returns a list of all Subnet definitions in the "data" element of the returned
 // map.
 func (c *Client) GetSDNSubnets(vnet string) (list map[string]interface{}, err error) {
 	url := fmt.Sprintf("/cluster/sdn/vnets/%s/subnets", vnet)
-	err = c.GetJsonRetryable(url, &list, 3)
+	err = c.getJsonRetryable(url, &list, 3)
 	return
 }
 
@@ -1898,23 +1898,23 @@ func (c *Client) CheckSDNSubnetExistance(vnet, id string) (existance bool, err e
 // The returned map["data"] section can be unmarshalled into a ConfigSDNSubnet struct.
 func (c *Client) GetSDNSubnet(vnet, name string) (subnet map[string]interface{}, err error) {
 	url := fmt.Sprintf("/cluster/sdn/vnets/%s/subnets/%s", vnet, name)
-	err = c.GetJsonRetryable(url, &subnet, 3)
+	err = c.getJsonRetryable(url, &subnet, 3)
 	return
 }
 
 // CreateSDNSubnet creates a new SDN DNS in the cluster
 func (c *Client) CreateSDNSubnet(vnet string, params map[string]interface{}) error {
-	return c.Post(params, fmt.Sprintf("/cluster/sdn/vnets/%s/subnets", vnet))
+	return c.post(params, fmt.Sprintf("/cluster/sdn/vnets/%s/subnets", vnet))
 }
 
 // DeleteSDNSubnet deletes an existing SDN DNS in the cluster
 func (c *Client) DeleteSDNSubnet(vnet, name string) error {
-	return c.Delete(fmt.Sprintf("/cluster/sdn/vnets/%s/subnets/%s", vnet, name))
+	return c.delete(fmt.Sprintf("/cluster/sdn/vnets/%s/subnets/%s", vnet, name))
 }
 
 // UpdateSDNSubnet updates the given DNS with the provided parameters
 func (c *Client) UpdateSDNSubnet(vnet, id string, params map[string]interface{}) error {
-	return c.Put(params, fmt.Sprintf("/cluster/sdn/vnets/%s/subnets/%s", vnet, id))
+	return c.put(params, fmt.Sprintf("/cluster/sdn/vnets/%s/subnets/%s", vnet, id))
 }
 
 // GetSDNDNSs returns a list of all DNS definitions in the "data" element of the returned
@@ -1924,7 +1924,7 @@ func (c *Client) GetSDNDNSs(typeFilter string) (list map[string]interface{}, err
 	if typeFilter != "" {
 		url += fmt.Sprintf("&type=%s", typeFilter)
 	}
-	err = c.GetJsonRetryable(url, &list, 3)
+	err = c.getJsonRetryable(url, &list, 3)
 	return
 }
 
@@ -1940,23 +1940,23 @@ func (c *Client) CheckSDNDNSExistance(id string) (existance bool, err error) {
 // The returned zone can be unmarshalled into a ConfigSDNDNS struct.
 func (c *Client) GetSDNDNS(name string) (dns map[string]interface{}, err error) {
 	url := fmt.Sprintf("/cluster/sdn/dns/%s", name)
-	err = c.GetJsonRetryable(url, &dns, 3)
+	err = c.getJsonRetryable(url, &dns, 3)
 	return
 }
 
 // CreateSDNDNS creates a new SDN DNS in the cluster
 func (c *Client) CreateSDNDNS(params map[string]interface{}) error {
-	return c.Post(params, "/cluster/sdn/dns")
+	return c.post(params, "/cluster/sdn/dns")
 }
 
 // DeleteSDNDNS deletes an existing SDN DNS in the cluster
 func (c *Client) DeleteSDNDNS(name string) error {
-	return c.Delete(fmt.Sprintf("/cluster/sdn/dns/%s", name))
+	return c.delete(fmt.Sprintf("/cluster/sdn/dns/%s", name))
 }
 
 // UpdateSDNDNS updates the given DNS with the provided parameters
 func (c *Client) UpdateSDNDNS(id string, params map[string]interface{}) error {
-	return c.Put(params, "/cluster/sdn/dns/"+id)
+	return c.put(params, "/cluster/sdn/dns/"+id)
 }
 
 // GetSDNZones returns a list of all the SDN zones defined in the cluster.
@@ -1965,7 +1965,7 @@ func (c *Client) GetSDNZones(pending bool, typeFilter string) (list map[string]i
 	if typeFilter != "" {
 		url += fmt.Sprintf("&type=%s", typeFilter)
 	}
-	err = c.GetJsonRetryable(url, &list, 3)
+	err = c.getJsonRetryable(url, &list, 3)
 	return
 }
 
@@ -1981,52 +1981,52 @@ func (c *Client) CheckSDNZoneExistance(id string) (existance bool, err error) {
 // The returned zone can be unmarshalled into a ConfigSDNZone struct.
 func (c *Client) GetSDNZone(zoneName string) (zone map[string]interface{}, err error) {
 	url := fmt.Sprintf("/cluster/sdn/zones/%s", zoneName)
-	err = c.GetJsonRetryable(url, &zone, 3)
+	err = c.getJsonRetryable(url, &zone, 3)
 	return
 }
 
 // CreateSDNZone creates a new SDN zone in the cluster
 func (c *Client) CreateSDNZone(params map[string]interface{}) error {
-	return c.Post(params, "/cluster/sdn/zones")
+	return c.post(params, "/cluster/sdn/zones")
 }
 
 // DeleteSDNZone deletes an existing SDN zone in the cluster
 func (c *Client) DeleteSDNZone(zoneName string) error {
-	return c.Delete(fmt.Sprintf("/cluster/sdn/zones/%s", zoneName))
+	return c.delete(fmt.Sprintf("/cluster/sdn/zones/%s", zoneName))
 }
 
 // UpdateSDNZone updates the given zone with the provided parameters
 func (c *Client) UpdateSDNZone(id string, params map[string]interface{}) error {
-	return c.Put(params, "/cluster/sdn/zones/"+id)
+	return c.put(params, "/cluster/sdn/zones/"+id)
 }
 
 // Shared
-func (c *Client) GetItemConfigMapStringInterface(url, text, message string) (map[string]interface{}, error) {
-	data, err := c.GetItemConfig(url, text, message)
+func (c *Client) getItemConfigMapStringInterface(url, text, message string) (map[string]interface{}, error) {
+	data, err := c.getItemConfig(url, text, message)
 	if err != nil {
 		return nil, err
 	}
 	return data["data"].(map[string]interface{}), err
 }
 
-func (c *Client) GetItemConfigString(url, text, message string) (string, error) {
-	data, err := c.GetItemConfig(url, text, message)
+func (c *Client) getItemConfigString(url, text, message string) (string, error) {
+	data, err := c.getItemConfig(url, text, message)
 	if err != nil {
 		return "", err
 	}
 	return data["data"].(string), err
 }
 
-func (c *Client) GetItemConfigInterfaceArray(url, text, message string) ([]interface{}, error) {
-	data, err := c.GetItemConfig(url, text, message)
+func (c *Client) getItemConfigInterfaceArray(url, text, message string) ([]interface{}, error) {
+	data, err := c.getItemConfig(url, text, message)
 	if err != nil {
 		return nil, err
 	}
 	return data["data"].([]interface{}), err
 }
 
-func (c *Client) GetItemConfig(url, text, message string) (config map[string]interface{}, err error) {
-	err = c.GetJsonRetryable(url, &config, 3)
+func (c *Client) getItemConfig(url, text, message string) (config map[string]interface{}, err error) {
+	err = c.getJsonRetryable(url, &config, 3)
 	if err != nil {
 		return nil, err
 	}
@@ -2038,82 +2038,82 @@ func (c *Client) GetItemConfig(url, text, message string) (config map[string]int
 
 // Makes a POST request without waiting on proxmox for the task to complete.
 // It returns the HTTP error as 'err'.
-func (c *Client) Post(Params map[string]interface{}, url string) (err error) {
+func (c *Client) post(Params map[string]interface{}, url string) (err error) {
 	reqbody := ParamsToBody(Params)
 	_, err = c.session.Post(url, nil, nil, &reqbody)
 	return
 }
 
-// CreateItemReturnStatus creates an item on the Proxmox API.
+// createItemReturnStatus creates an item on the Proxmox API.
 // It returns the body of the HTTP response and any HTTP error occurred during the request.
-func (c *Client) CreateItemReturnStatus(params map[string]interface{}, url string) (exitStatus string, err error) {
+func (c *Client) createItemReturnStatus(params map[string]interface{}, url string) (exitStatus string, err error) {
 	reqbody := ParamsToBody(params)
 	resp, err := c.session.Post(url, nil, nil, &reqbody)
-	exitStatus = c.HandleTaskError(resp)
+	exitStatus = c.handleTaskError(resp)
 	return
 }
 
 // Makes a POST request and waits on proxmox for the task to complete.
 // It returns the status of the test as 'exitStatus' and the HTTP error as 'err'.
-func (c *Client) PostWithTask(Params map[string]interface{}, url string) (exitStatus string, err error) {
+func (c *Client) postWithTask(Params map[string]interface{}, url string) (exitStatus string, err error) {
 	reqbody := ParamsToBody(Params)
 	var resp *http.Response
 	resp, err = c.session.Post(url, nil, nil, &reqbody)
 	if err != nil {
-		return c.HandleTaskError(resp), err
+		return c.handleTaskError(resp), err
 	}
-	return c.CheckTask(resp)
+	return c.checkTask(resp)
 }
 
 // Makes a PUT request without waiting on proxmox for the task to complete.
 // It returns the HTTP error as 'err'.
-func (c *Client) Put(Params map[string]interface{}, url string) (err error) {
+func (c *Client) put(Params map[string]interface{}, url string) (err error) {
 	reqbody := ParamsToBodyWithAllEmpty(Params)
 	_, err = c.session.Put(url, nil, nil, &reqbody)
 	return
 }
 
-// UpdateItemReturnStatus updates an item on the Proxmox API.
+// updateItemReturnStatus updates an item on the Proxmox API.
 // It returns the body of the HTTP response and any HTTP error occurred during the request.
-func (c *Client) UpdateItemReturnStatus(params map[string]interface{}, url string) (exitStatus string, err error) {
+func (c *Client) updateItemReturnStatus(params map[string]interface{}, url string) (exitStatus string, err error) {
 	reqbody := ParamsToBody(params)
 	resp, err := c.session.Put(url, nil, nil, &reqbody)
-	exitStatus = c.HandleTaskError(resp)
+	exitStatus = c.handleTaskError(resp)
 	return
 }
 
 // Makes a PUT request and waits on proxmox for the task to complete.
 // It returns the status of the test as 'exitStatus' and the HTTP error as 'err'.
-func (c *Client) PutWithTask(Params map[string]interface{}, url string) (exitStatus string, err error) {
+func (c *Client) putWithTask(Params map[string]interface{}, url string) (exitStatus string, err error) {
 	reqbody := ParamsToBodyWithAllEmpty(Params)
 	var resp *http.Response
 	resp, err = c.session.Put(url, nil, nil, &reqbody)
 	if err != nil {
-		return c.HandleTaskError(resp), err
+		return c.handleTaskError(resp), err
 	}
-	return c.CheckTask(resp)
+	return c.checkTask(resp)
 }
 
 // Makes a DELETE request without waiting on proxmox for the task to complete.
 // It returns the HTTP error as 'err'.
-func (c *Client) Delete(url string) (err error) {
+func (c *Client) delete(url string) (err error) {
 	_, err = c.session.Delete(url, nil, nil)
 	return
 }
 
 // Makes a DELETE request and waits on proxmox for the task to complete.
 // It returns the status of the test as 'exitStatus' and the HTTP error as 'err'.
-func (c *Client) DeleteWithTask(url string) (exitStatus string, err error) {
+func (c *Client) deleteWithTask(url string) (exitStatus string, err error) {
 	var resp *http.Response
 	resp, err = c.session.Delete(url, nil, nil)
 	if err != nil {
-		return c.HandleTaskError(resp), err
+		return c.handleTaskError(resp), err
 	}
-	return c.CheckTask(resp)
+	return c.checkTask(resp)
 }
 
-func (c *Client) GetItemListInterfaceArray(url string) ([]interface{}, error) {
-	list, err := c.GetItemList(url)
+func (c *Client) getItemListInterfaceArray(url string) ([]interface{}, error) {
+	list, err := c.getItemList(url)
 	if err != nil {
 		return nil, err
 	}
@@ -2124,14 +2124,14 @@ func (c *Client) GetItemListInterfaceArray(url string) ([]interface{}, error) {
 	return data, nil
 }
 
-func (c *Client) GetItemList(url string) (list map[string]interface{}, err error) {
-	err = c.GetJsonRetryable(url, &list, 3)
+func (c *Client) getItemList(url string) (list map[string]interface{}, err error) {
+	err = c.getJsonRetryable(url, &list, 3)
 	return
 }
 
-// HandleTaskError reads the body from the passed in HTTP response and closes it.
+// handleTaskError reads the body from the passed in HTTP response and closes it.
 // It returns the body of the passed in HTTP response.
-func (c *Client) HandleTaskError(resp *http.Response) (exitStatus string) {
+func (c *Client) handleTaskError(resp *http.Response) (exitStatus string) {
 	// Only attempt to read the body if it is available.
 	if resp == nil || resp.Body == nil {
 		return "no body available for HTTP response"
@@ -2145,9 +2145,9 @@ func (c *Client) HandleTaskError(resp *http.Response) (exitStatus string) {
 	return string(b)
 }
 
-// CheckTask polls the API to check if the Proxmox task has been completed.
+// checkTask polls the API to check if the Proxmox task has been completed.
 // It returns the body of the HTTP response and any HTTP error occurred during the request.
-func (c *Client) CheckTask(resp *http.Response) (exitStatus string, err error) {
+func (c *Client) checkTask(resp *http.Response) (exitStatus string, err error) {
 	taskResponse, err := ResponseJSON(resp)
 	if err != nil {
 		return "", err

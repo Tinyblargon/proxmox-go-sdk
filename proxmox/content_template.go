@@ -107,13 +107,13 @@ func createTemplateList(templateList []interface{}) *[]TemplateItem {
 
 // Download an LXC template.
 func DownloadLxcTemplate(client *Client, content ConfigContent_Template) (err error) {
-	_, err = client.PostWithTask(content.mapToApiValues(), "/nodes/"+content.Node+"/aplinfo")
+	_, err = client.postWithTask(content.mapToApiValues(), "/nodes/"+content.Node+"/aplinfo")
 	return
 }
 
 // List all LXC templates available for download.
 func ListTemplates(client *Client, node string) (templateList *[]TemplateItem, err error) {
-	tmpList, err := client.GetItemListInterfaceArray("/nodes/" + node + "/aplinfo")
+	tmpList, err := client.getItemListInterfaceArray("/nodes/" + node + "/aplinfo")
 	if err != nil {
 		return
 	}
