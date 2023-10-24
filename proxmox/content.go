@@ -133,7 +133,7 @@ func DeleteFile(client *Client, node string, content Content_File) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = client.DeleteWithTask("/nodes/" + node + "/storage/" + content.Storage + "/content" + content.format())
+	_, err = client.deleteWithTask("/nodes/" + node + "/storage/" + content.Storage + "/content" + content.format())
 	return
 }
 
@@ -143,7 +143,7 @@ func ListFiles(client *Client, node, storage string, content ContentType) (files
 	if err != nil {
 		return
 	}
-	fileList, err := client.GetItemListInterfaceArray("/nodes/" + node + "/storage/" + storage + "/content?content=" + string(content))
+	fileList, err := client.getItemListInterfaceArray("/nodes/" + node + "/storage/" + storage + "/content?content=" + string(content))
 	if err != nil {
 		return
 	}

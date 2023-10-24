@@ -766,7 +766,7 @@ type qemuDiskResize struct {
 // Increase the disk size to the specified amount in gigabytes
 // Decrease of disk size is not permitted.
 func (disk qemuDiskResize) resize(vmr *VmRef, client *Client) (exitStatus string, err error) {
-	return client.PutWithTask(map[string]interface{}{"disk": disk.Id, "size": strconv.Itoa(int(disk.SizeInGigaBytes)) + "G"}, fmt.Sprintf("/nodes/%s/%s/%d/resize", vmr.node, vmr.vmType, vmr.vmId))
+	return client.putWithTask(map[string]interface{}{"disk": disk.Id, "size": strconv.Itoa(int(disk.SizeInGigaBytes)) + "G"}, fmt.Sprintf("/nodes/%s/%s/%d/resize", vmr.node, vmr.vmType, vmr.vmId))
 }
 
 type qemuDiskMove struct {
@@ -787,7 +787,7 @@ func (disk qemuDiskMove) mapToApiValues(delete bool) (params map[string]interfac
 }
 
 func (disk qemuDiskMove) move(delete bool, vmr *VmRef, client *Client) (exitStatus interface{}, err error) {
-	return client.PostWithTask(disk.mapToApiValues(delete), fmt.Sprintf("/nodes/%s/%s/%d/move_disk", vmr.node, vmr.vmType, vmr.vmId))
+	return client.postWithTask(disk.mapToApiValues(delete), fmt.Sprintf("/nodes/%s/%s/%d/move_disk", vmr.node, vmr.vmType, vmr.vmId))
 }
 
 func (disk qemuDiskMove) Validate() (err error) {

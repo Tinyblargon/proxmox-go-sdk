@@ -31,7 +31,7 @@ func (config ConfigUser) CreateUser(client *Client) (err error) {
 		return
 	}
 	params := config.mapToApiValues(true)
-	err = client.Post(params, "/access/users")
+	err = client.post(params, "/access/users")
 	if err != nil {
 		params, _ := json.Marshal(&params)
 		return fmt.Errorf("error creating User: %v, (params: %v)", err, string(params))
@@ -48,7 +48,7 @@ func (config ConfigUser) DeleteUser(client *Client) (err error) {
 		return fmt.Errorf("user (%s) could not be deleted, the user does not exist", config.User.ToString())
 	}
 	// Proxmox silently fails a user delete if the users does not exist
-	return client.Delete("/access/users/" + config.User.ToString())
+	return client.delete("/access/users/" + config.User.ToString())
 }
 
 // Maps the struct to the API values proxmox understands
@@ -150,7 +150,7 @@ func (config *ConfigUser) SetUser(userId UserID, password UserPassword, client *
 
 func (config *ConfigUser) UpdateUser(client *Client) (err error) {
 	params := config.mapToApiValues(false)
-	err = client.Put(params, "/access/users/"+config.User.ToString())
+	err = client.put(params, "/access/users/"+config.User.ToString())
 	if err != nil {
 		params, _ := json.Marshal(&params)
 		return fmt.Errorf("error updating User: %v, (params: %v)", err, string(params))
@@ -166,7 +166,7 @@ func (config ConfigUser) UpdateUserPassword(client *Client) (err error) {
 	if err != nil {
 		return err
 	}
-	return client.Put(map[string]interface{}{
+	return client.put(map[string]interface{}{
 		"userid":   config.User.ToString(),
 		"password": config.Password,
 	}, "/access/password")
@@ -215,7 +215,7 @@ func (ApiToken) mapToArray(params []interface{}) *[]ApiToken {
 }
 
 func (config ConfigUser) CreateApiToken(client *Client, token ApiToken) (value string, err error) {
-	status, err := client.CreateItemReturnStatus(map[string]interface{}{
+	status, err := client.createItemReturnStatus(map[string]interface{}{
 		"comment": token.Comment,
 		"expire":  token.Expire,
 		"privsep": token.Privsep,
@@ -230,7 +230,7 @@ func (config ConfigUser) CreateApiToken(client *Client, token ApiToken) (value s
 }
 
 func (config ConfigUser) UpdateApiToken(client *Client, token ApiToken) (err error) {
-	err = client.Put(map[string]interface{}{
+	err = client.put(map[string]interface{}{
 		"comment": token.Comment,
 		"expire":  token.Expire,
 		"privsep": token.Privsep,
@@ -239,7 +239,7 @@ func (config ConfigUser) UpdateApiToken(client *Client, token ApiToken) (err err
 }
 
 func (config ConfigUser) ListApiTokens(client *Client) (tokens *[]ApiToken, err error) {
-	status, err := client.GetItemListInterfaceArray("/access/users/" + config.User.ToString() + "/token")
+	status, err := client.getItemListInterfaceArray("/access/users/" + config.User.ToString() + "/token")
 	if err != nil {
 		return
 	}
@@ -248,7 +248,7 @@ func (config ConfigUser) ListApiTokens(client *Client) (tokens *[]ApiToken, err 
 }
 
 func (config ConfigUser) DeleteApiToken(client *Client, token ApiToken) (err error) {
-	err = client.Delete("/access/users/" + config.User.ToString() + "/token/" + token.TokenId)
+	err = client.delete("/access/users/" + config.User.ToString() + "/token/" + token.TokenId)
 	return
 }
 
@@ -394,16 +394,16 @@ func ListUsers(client *Client, full bool) (*[]ConfigUser, error) {
 
 // Returns users without group information
 func listUsersPartial(client *Client) ([]interface{}, error) {
-	return client.GetItemListInterfaceArray("/access/users")
+	return client.getItemListInterfaceArray("/access/users")
 }
 
 // Returns users with group information
 func listUsersFull(client *Client) ([]interface{}, error) {
-	return client.GetItemListInterfaceArray("/access/users?full=1")
+	return client.getItemListInterfaceArray("/access/users?full=1")
 }
 
 func NewConfigUserFromApi(userId UserID, client *Client) (*ConfigUser, error) {
-	userConfig, err := client.GetItemConfigMapStringInterface("/access/users/"+userId.ToString(), "user", "CONFIG")
+	userConfig, err := client.getItemConfigMapStringInterface("/access/users/"+userId.ToString(), "user", "CONFIG")
 	if err != nil {
 		return nil, err
 	}
@@ -451,5 +451,5 @@ func NewUserIDs(userIds string) (*[]UserID, error) {
 
 // URL for updating users
 func updateUser(user UserID, params map[string]interface{}, client *Client) error {
-	return client.Put(params, "/access/users/"+user.ToString())
+	return client.put(params, "/access/users/"+user.ToString())
 }

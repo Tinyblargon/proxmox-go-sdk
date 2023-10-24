@@ -15,7 +15,7 @@ type HAGroup struct {
 }
 
 func (c *Client) GetHAGroupList() (haGroups []HAGroup, err error) {
-	list, err := c.GetItemList("/cluster/ha/groups")
+	list, err := c.getItemList("/cluster/ha/groups")
 
 	if err != nil {
 		return nil, err
