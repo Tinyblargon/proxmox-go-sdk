@@ -25,6 +25,9 @@ func main() {
 		}
 		os.Exit(0)
 	}
+	//////////////////////////////////////////////
+	// EVERYTHING BELOW THIS LINE IS DEPRECATED //
+	//////////////////////////////////////////////
 	insecure := flag.Bool("insecure", false, "TLS insecure mode")
 	proxmox.Debug = flag.Bool("debug", false, "debug mode")
 	fConfigFile := flag.String("file", "", "file to get the config from")
