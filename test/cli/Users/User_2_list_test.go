@@ -8,9 +8,9 @@ package cli_user_test
 import (
 	"testing"
 
-	_ "github.com/Telmate/proxmox-api-go/cli/command/commands"
-	cliTest "github.com/Telmate/proxmox-api-go/test/cli"
-	"github.com/Telmate/proxmox-api-go/test/cli/Group/group_sub_tests"
+	_ "github.com/Tinyblargon/proxmox-go-sdk/cli/command/commands"
+	cliTest "github.com/Tinyblargon/proxmox-go-sdk/test/cli"
+	"github.com/Tinyblargon/proxmox-go-sdk/test/cli/Group/group_sub_tests"
 )
 
 func Test_User_2_Cleanup(t *testing.T) {

@@ -3,10 +3,10 @@ package group_test
 import (
 	"testing"
 
-	"github.com/Telmate/proxmox-api-go/proxmox"
-	cliTest "github.com/Telmate/proxmox-api-go/test/cli"
-	"github.com/Telmate/proxmox-api-go/test/cli/Group/group_sub_tests"
-	"github.com/Telmate/proxmox-api-go/test/cli/Users/user_sub_tests"
+	"github.com/Tinyblargon/proxmox-go-sdk/proxmox"
+	cliTest "github.com/Tinyblargon/proxmox-go-sdk/test/cli"
+	"github.com/Tinyblargon/proxmox-go-sdk/test/cli/Group/group_sub_tests"
+	"github.com/Tinyblargon/proxmox-go-sdk/test/cli/Users/user_sub_tests"
 )
 
 // create users

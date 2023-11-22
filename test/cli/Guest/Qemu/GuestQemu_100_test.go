@@ -3,8 +3,8 @@ package cli_guestqemu_test
 import (
 	"testing"
 
-	_ "github.com/Telmate/proxmox-api-go/cli/command/commands"
-	cliTest "github.com/Telmate/proxmox-api-go/test/cli"
+	_ "github.com/Tinyblargon/proxmox-go-sdk/cli/command/commands"
+	cliTest "github.com/Tinyblargon/proxmox-go-sdk/test/cli"
 )
 
 func Test_GuestQemu_100_Cleanup(t *testing.T) {

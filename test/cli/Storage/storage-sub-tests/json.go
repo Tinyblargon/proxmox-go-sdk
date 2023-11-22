@@ -3,8 +3,8 @@ package storagesubtests
 import (
 	"encoding/json"
 
-	_ "github.com/Telmate/proxmox-api-go/cli/command/commands"
-	"github.com/Telmate/proxmox-api-go/proxmox"
+	_ "github.com/Tinyblargon/proxmox-go-sdk/cli/command/commands"
+	"github.com/Tinyblargon/proxmox-go-sdk/proxmox"
 )
 
 func CloneJson(jsonStruct proxmox.ConfigStorage) *proxmox.ConfigStorage {

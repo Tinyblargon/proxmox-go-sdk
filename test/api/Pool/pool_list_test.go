@@ -3,7 +3,7 @@ package api_test
 import (
 	"testing"
 
-	api_test "github.com/Telmate/proxmox-api-go/test/api"
+	api_test "github.com/Tinyblargon/proxmox-go-sdk/test/api"
 	"github.com/stretchr/testify/require"
 )
 

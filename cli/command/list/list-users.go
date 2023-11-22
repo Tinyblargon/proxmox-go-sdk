@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Telmate/proxmox-api-go/cli"
-	"github.com/Telmate/proxmox-api-go/proxmox"
+	"github.com/Tinyblargon/proxmox-go-sdk/cli"
+	"github.com/Tinyblargon/proxmox-go-sdk/proxmox"
 	"github.com/spf13/cobra"
 )
 

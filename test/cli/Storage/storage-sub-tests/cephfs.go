@@ -3,7 +3,7 @@ package storagesubtests
 import (
 	"testing"
 
-	"github.com/Telmate/proxmox-api-go/proxmox"
+	"github.com/Tinyblargon/proxmox-go-sdk/proxmox"
 )
 
 var CephfsFull = proxmox.ConfigStorage{
