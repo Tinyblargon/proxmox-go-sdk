@@ -684,7 +684,7 @@ func (c *Client) CreateQemuSnapshot(vmr *VmRef, snapshotName string) (exitStatus
 
 // DEPRECATED superseded by DeleteSnapshot()
 func (c *Client) DeleteQemuSnapshot(vmr *VmRef, snapshotName SnapshotName) (exitStatus string, err error) {
-	return DeleteSnapshot(c, vmr, snapshotName)
+	return snapshotName.Delete(c, vmr)
 }
 
 // DEPRECATED superseded by ListSnapshots()
@@ -706,8 +706,8 @@ func (c *Client) ListQemuSnapshot(vmr *VmRef) (taskResponse map[string]interface
 }
 
 // DEPRECATED superseded by RollbackSnapshot()
-func (c *Client) RollbackQemuVm(vmr *VmRef, snapshot string) (exitStatus string, err error) {
-	return RollbackSnapshot(c, vmr, snapshot)
+func (c *Client) RollbackQemuVm(vmr *VmRef, snapshot SnapshotName) (exitStatus string, err error) {
+	return snapshot.Rollback(c, vmr)
 }
 
 // DEPRECATED SetVmConfig - send config options

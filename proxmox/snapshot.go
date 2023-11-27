@@ -2,11 +2,20 @@ package proxmox
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 	"unicode"
 )
+
+func ListSnapshots(c *Client, vmr *VmRef) (rawSnapshots, error) {
+	err := c.CheckVmRef(vmr)
+	if err != nil {
+		return nil, err
+	}
+	return c.getItemConfigInterfaceArray("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/", "Guest", "SNAPSHOTS")
+}
 
 type ConfigSnapshot struct {
 	Name        SnapshotName `json:"name,omitempty"`
@@ -14,7 +23,7 @@ type ConfigSnapshot struct {
 	VmState     bool         `json:"ram,omitempty"`
 }
 
-func (config ConfigSnapshot) mapToApiValues() map[string]interface{} {
+func (config ConfigSnapshot) mapToApi() map[string]interface{} {
 	return map[string]interface{}{
 		"snapname":    config.Name,
 		"description": config.Description,
@@ -22,7 +31,7 @@ func (config ConfigSnapshot) mapToApiValues() map[string]interface{} {
 	}
 }
 
-func (config ConfigSnapshot) CreateSnapshot(c *Client, vmr *VmRef) (err error) {
+func (config ConfigSnapshot) Create(c *Client, vmr *VmRef) (err error) {
 	err = c.CheckVmRef(vmr)
 	if err != nil {
 		return
@@ -31,7 +40,7 @@ func (config ConfigSnapshot) CreateSnapshot(c *Client, vmr *VmRef) (err error) {
 	if err != nil {
 		return
 	}
-	params := config.mapToApiValues()
+	params := config.mapToApi()
 	_, err = c.postWithTask(params, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/")
 	if err != nil {
 		params, _ := json.Marshal(&params)
@@ -45,57 +54,6 @@ func (config ConfigSnapshot) Validate() error {
 }
 
 type rawSnapshots []interface{}
-
-func ListSnapshots(c *Client, vmr *VmRef) (rawSnapshots, error) {
-	err := c.CheckVmRef(vmr)
-	if err != nil {
-		return nil, err
-	}
-	return c.getItemConfigInterfaceArray("/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/", "Guest", "SNAPSHOTS")
-}
-
-// Can only be used to update the description of an already existing snapshot
-func UpdateSnapshotDescription(c *Client, vmr *VmRef, snapshot SnapshotName, description string) (err error) {
-	err = c.CheckVmRef(vmr)
-	if err != nil {
-		return
-	}
-	err = snapshot.Validate()
-	if err != nil {
-		return
-	}
-	return c.put(map[string]interface{}{"description": description}, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+string(snapshot)+"/config")
-}
-
-func DeleteSnapshot(c *Client, vmr *VmRef, snapshot SnapshotName) (exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
-	if err != nil {
-		return
-	}
-	err = snapshot.Validate()
-	if err != nil {
-		return
-	}
-	return c.deleteWithTask("/nodes/" + vmr.node + "/" + vmr.vmType + "/" + strconv.Itoa(vmr.vmId) + "/snapshot/" + string(snapshot))
-}
-
-func RollbackSnapshot(c *Client, vmr *VmRef, snapshot string) (exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
-	if err != nil {
-		return
-	}
-	return c.postWithTask(nil, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+snapshot+"/rollback")
-}
-
-// Used for formatting the output when retrieving snapshots
-type Snapshot struct {
-	Name        SnapshotName `json:"name"`
-	SnapTime    uint         `json:"time,omitempty"`
-	Description string       `json:"description,omitempty"`
-	VmState     bool         `json:"ram,omitempty"`
-	Children    []*Snapshot  `json:"children,omitempty"`
-	Parent      SnapshotName `json:"parent,omitempty"`
-}
 
 // Formats the taskResponse as a list of snapshots
 func (raw rawSnapshots) FormatList() (list []*Snapshot) {
@@ -141,6 +99,16 @@ func (raw rawSnapshots) FormatTree() (tree []*Snapshot) {
 	return
 }
 
+// Used for formatting the output when retrieving snapshots
+type Snapshot struct {
+	Name        SnapshotName `json:"name"`
+	SnapTime    uint         `json:"time,omitempty"`
+	Description string       `json:"description,omitempty"`
+	VmState     bool         `json:"ram,omitempty"`
+	Children    []*Snapshot  `json:"children,omitempty"`
+	Parent      SnapshotName `json:"parent,omitempty"`
+}
+
 // Minimum length of 3 characters
 // Maximum length of 40 characters
 // First character must be a letter
@@ -154,19 +122,52 @@ const (
 	SnapshotName_Error_StartNoLetter     string = "SnapshotName must start with a letter"
 )
 
+func (snapshot SnapshotName) Delete(c *Client, vmr *VmRef) (exitStatus string, err error) {
+	err = c.CheckVmRef(vmr)
+	if err != nil {
+		return
+	}
+	err = snapshot.Validate()
+	if err != nil {
+		return
+	}
+	return c.deleteWithTask("/nodes/" + vmr.node + "/" + vmr.vmType + "/" + strconv.Itoa(vmr.vmId) + "/snapshot/" + string(snapshot))
+}
+
+func (snapshot SnapshotName) Rollback(c *Client, vmr *VmRef) (exitStatus string, err error) {
+	err = c.CheckVmRef(vmr)
+	if err != nil {
+		return
+	}
+	return c.postWithTask(nil, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+string(snapshot)+"/rollback")
+}
+
+// Can only be used to update the description of an already existing snapshot
+func (snapshot SnapshotName) Update(c *Client, vmr *VmRef, description string) (err error) {
+	err = c.CheckVmRef(vmr)
+	if err != nil {
+		return
+	}
+	err = snapshot.Validate()
+	if err != nil {
+		return
+	}
+	return c.put(map[string]interface{}{"description": description}, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/snapshot/"+string(snapshot)+"/config")
+}
+
 func (name SnapshotName) Validate() error {
 	regex, _ := regexp.Compile(`^([a-zA-Z])([a-z]|[A-Z]|[0-9]|_|-){2,39}$`)
 	if !regex.Match([]byte(name)) {
 		if len(name) < 3 {
-			return fmt.Errorf(SnapshotName_Error_MinLength)
+			return errors.New(SnapshotName_Error_MinLength)
 		}
 		if len(name) > 40 {
-			return fmt.Errorf(SnapshotName_Error_MaxLength)
+			return errors.New(SnapshotName_Error_MaxLength)
 		}
 		if !unicode.IsLetter(rune(name[0])) {
-			return fmt.Errorf(SnapshotName_Error_StartNoLetter)
+			return errors.New(SnapshotName_Error_StartNoLetter)
 		}
-		return fmt.Errorf(SnapshotName_Error_IllegalCharacters)
+		return errors.New(SnapshotName_Error_IllegalCharacters)
 	}
 	return nil
 }
