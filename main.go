@@ -249,7 +249,7 @@ func main() {
 	case "deleteQemuSnapshot":
 		sourceVmr, err := c.GetVmRefByName(flag.Args()[1])
 		failError(err)
-		jbody, err = c.DeleteQemuSnapshot(sourceVmr, flag.Args()[2])
+		jbody, err = c.DeleteQemuSnapshot(sourceVmr, proxmox.SnapshotName(flag.Args()[2]))
 		failError(err)
 
 	case "listQemuSnapshot":

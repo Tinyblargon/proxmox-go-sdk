@@ -683,7 +683,7 @@ func (c *Client) CreateQemuSnapshot(vmr *VmRef, snapshotName string) (exitStatus
 }
 
 // DEPRECATED superseded by DeleteSnapshot()
-func (c *Client) DeleteQemuSnapshot(vmr *VmRef, snapshotName string) (exitStatus string, err error) {
+func (c *Client) DeleteQemuSnapshot(vmr *VmRef, snapshotName SnapshotName) (exitStatus string, err error) {
 	return DeleteSnapshot(c, vmr, snapshotName)
 }
 
