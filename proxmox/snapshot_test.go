@@ -37,26 +37,26 @@ func Test_ConfigSnapshot_Validate(t *testing.T) {
 }
 
 // Test the formatting logic to build the tree of snapshots
-func Test_FormatSnapshotsTree(t *testing.T) {
-	input := test_FormatSnapshots_Input()
-	output := test_FormatSnapshotsTree_Output()
+func Test_rawSnapshots_FormatTree(t *testing.T) {
+	input := test_rawSnapshots_FormatSnapshots_Input()
+	output := test_rawSnapshots_FormatTree_Output()
 	for i, e := range input {
-		result, _ := json.Marshal(e.FormatSnapshotsTree())
+		result, _ := json.Marshal(e.FormatTree())
 		require.JSONEq(t, output[i], string(result))
 	}
 }
 
 // Test the formatting logic to build the list of snapshots
-func Test_FormatSnapshotsList(t *testing.T) {
-	input := test_FormatSnapshots_Input()
-	output := test_FormatSnapshotsList_Output()
+func Test_rawSnapshots_FormatList(t *testing.T) {
+	input := test_rawSnapshots_FormatSnapshots_Input()
+	output := test_rawSnapshots_FormatList_Output()
 	for i, e := range input {
-		result, _ := json.Marshal(e.FormatSnapshotsList())
+		result, _ := json.Marshal(e.FormatList())
 		require.JSONEq(t, output[i], string(result))
 	}
 }
 
-func test_FormatSnapshots_Input() []rawSnapshots {
+func test_rawSnapshots_FormatSnapshots_Input() []rawSnapshots {
 	return []rawSnapshots{{map[string]interface{}{
 		"name":        "aa",
 		"snaptime":    float64(1666361849),
@@ -184,7 +184,7 @@ func test_FormatSnapshots_Input() []rawSnapshots {
 	}}}
 }
 
-func test_FormatSnapshotsTree_Output() []string {
+func test_rawSnapshots_FormatTree_Output() []string {
 	return []string{`[{
 		"name":"aa","time":1666361849,"children":[{
 			"name":"aaa","time":1666361866,"ram":true,"children":[{
@@ -209,7 +209,7 @@ func test_FormatSnapshotsTree_Output() []string {
 			"name":"bbb","time":1666362062}]}]`}
 }
 
-func test_FormatSnapshotsList_Output() []string {
+func test_rawSnapshots_FormatList_Output() []string {
 	return []string{`[{
 		"name":"aa","time":1666361849},{
 		"name":"aaa","time":1666361866,"ram":true,"parent":"aa"},{

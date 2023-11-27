@@ -98,7 +98,7 @@ type Snapshot struct {
 }
 
 // Formats the taskResponse as a list of snapshots
-func (raw rawSnapshots) FormatSnapshotsList() (list []*Snapshot) {
+func (raw rawSnapshots) FormatList() (list []*Snapshot) {
 	list = make([]*Snapshot, len(raw))
 	for i, e := range raw {
 		list[i] = &Snapshot{}
@@ -122,8 +122,8 @@ func (raw rawSnapshots) FormatSnapshotsList() (list []*Snapshot) {
 }
 
 // Formats a list of snapshots as a tree of snapshots
-func (raw rawSnapshots) FormatSnapshotsTree() (tree []*Snapshot) {
-	list := raw.FormatSnapshotsList()
+func (raw rawSnapshots) FormatTree() (tree []*Snapshot) {
+	list := raw.FormatList()
 	for _, e := range list {
 		for _, ee := range list {
 			if e.Parent == ee.Name {

@@ -24,9 +24,9 @@ var (
 			var list []*proxmox.Snapshot
 			if noTree {
 				noTree = false
-				list = rawSnapshots.FormatSnapshotsList()
+				list = rawSnapshots.FormatList()
 			} else {
-				list = rawSnapshots.FormatSnapshotsTree()
+				list = rawSnapshots.FormatTree()
 			}
 			if len(list) == 0 {
 				listCmd.Printf("Guest with ID (%d) has no snapshots", id)
