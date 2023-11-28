@@ -293,7 +293,7 @@ func main() {
 	case "rollbackQemu":
 		sourceVmr, err := c.GetVmRefByName(flag.Args()[1])
 		failError(err)
-		jbody, err = c.RollbackQemuVm(sourceVmr, flag.Args()[2])
+		jbody, err = c.RollbackQemuVm(sourceVmr, proxmox.SnapshotName(flag.Args()[2]))
 		failError(err)
 		// TODO make sshforward in new cli
 	case "sshforward":
