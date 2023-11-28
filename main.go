@@ -240,61 +240,6 @@ func main() {
 		failError(config.UpdateConfig(vmr, c))
 		log.Println("Complete")
 
-	case "createQemuSnapshot":
-		sourceVmr, err := c.GetVmRefByName(flag.Args()[1])
-		failError(err)
-		jbody, err = c.CreateQemuSnapshot(sourceVmr, flag.Args()[2])
-		failError(err)
-
-	case "deleteQemuSnapshot":
-		sourceVmr, err := c.GetVmRefByName(flag.Args()[1])
-		failError(err)
-		jbody, err = c.DeleteQemuSnapshot(sourceVmr, flag.Args()[2])
-		failError(err)
-
-	case "listQemuSnapshot":
-		sourceVmr, err := c.GetVmRefByName(flag.Args()[1])
-		if err == nil {
-			jbody, _, err = c.ListQemuSnapshot(sourceVmr)
-			if rec, ok := jbody.(map[string]interface{}); ok {
-				temp := rec["data"].([]interface{})
-				for _, val := range temp {
-					snapshotName := val.(map[string]interface{})
-					if snapshotName["name"] != "current" {
-						fmt.Println(snapshotName["name"])
-					}
-				}
-			} else {
-				fmt.Printf("record not a map[string]interface{}: %v\n", jbody)
-			}
-		}
-		failError(err)
-
-	case "listQemuSnapshot2":
-		sourceVmrs, err := c.GetVmRefsByName(flag.Args()[1])
-		if err == nil {
-			for _, sourceVmr := range sourceVmrs {
-				jbody, _, err = c.ListQemuSnapshot(sourceVmr)
-				if rec, ok := jbody.(map[string]interface{}); ok {
-					temp := rec["data"].([]interface{})
-					for _, val := range temp {
-						snapshotName := val.(map[string]interface{})
-						if snapshotName["name"] != "current" {
-							fmt.Printf("%d@%s:%s\n", sourceVmr.VmId(), sourceVmr.Node(), snapshotName["name"])
-						}
-					}
-				} else {
-					fmt.Printf("record not a map[string]interface{}: %v\n", jbody)
-				}
-			}
-		}
-		failError(err)
-
-	case "rollbackQemu":
-		sourceVmr, err := c.GetVmRefByName(flag.Args()[1])
-		failError(err)
-		jbody, err = c.RollbackQemuVm(sourceVmr, flag.Args()[2])
-		failError(err)
 		// TODO make sshforward in new cli
 	case "sshforward":
 		vmr = proxmox.NewVmRef(vmid)

@@ -657,59 +657,6 @@ func (c *Client) CloneQemuVm(vmr *VmRef, vmParams map[string]interface{}) (exitS
 	return
 }
 
-// DEPRECATED superseded by CreateSnapshot()
-func (c *Client) CreateQemuSnapshot(vmr *VmRef, snapshotName string) (exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
-	snapshotParams := map[string]interface{}{
-		"snapname": snapshotName,
-	}
-	reqbody := ParamsToBody(snapshotParams)
-	if err != nil {
-		return "", err
-	}
-	url := fmt.Sprintf("/nodes/%s/%s/%d/snapshot/", vmr.node, vmr.vmType, vmr.vmId)
-	resp, err := c.session.Post(url, nil, nil, &reqbody)
-	if err == nil {
-		taskResponse, err := ResponseJSON(resp)
-		if err != nil {
-			return "", err
-		}
-		exitStatus, err = c.WaitForCompletion(taskResponse)
-		if err != nil {
-			return "", err
-		}
-	}
-	return
-}
-
-// DEPRECATED superseded by DeleteSnapshot()
-func (c *Client) DeleteQemuSnapshot(vmr *VmRef, snapshotName string) (exitStatus string, err error) {
-	return DeleteSnapshot(c, vmr, snapshotName)
-}
-
-// DEPRECATED superseded by ListSnapshots()
-func (c *Client) ListQemuSnapshot(vmr *VmRef) (taskResponse map[string]interface{}, exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
-	if err != nil {
-		return nil, "", err
-	}
-	url := fmt.Sprintf("/nodes/%s/%s/%d/snapshot/", vmr.node, vmr.vmType, vmr.vmId)
-	resp, err := c.session.Get(url, nil, nil)
-	if err == nil {
-		taskResponse, err := ResponseJSON(resp)
-		if err != nil {
-			return nil, "", err
-		}
-		return taskResponse, "", nil
-	}
-	return
-}
-
-// DEPRECATED superseded by RollbackSnapshot()
-func (c *Client) RollbackQemuVm(vmr *VmRef, snapshot string) (exitStatus string, err error) {
-	return RollbackSnapshot(c, vmr, snapshot)
-}
-
 // DEPRECATED SetVmConfig - send config options
 func (c *Client) SetVmConfig(vmr *VmRef, params map[string]interface{}) (exitStatus interface{}, err error) {
 	return c.postWithTask(params, "/nodes/"+vmr.node+"/"+vmr.vmType+"/"+strconv.Itoa(vmr.vmId)+"/config")
