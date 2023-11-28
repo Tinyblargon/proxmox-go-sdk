@@ -18,6 +18,13 @@ type VmRef struct {
 	haGroup string
 }
 
+func (vmr *VmRef) Check(c *Client) (err error) {
+	if vmr.node == "" || vmr.vmType == "" {
+		_, err = c.GetVmInfo(vmr)
+	}
+	return
+}
+
 func (vmr *VmRef) GetVmType() string {
 	return vmr.vmType
 }
