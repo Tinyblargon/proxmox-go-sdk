@@ -34,65 +34,6 @@ type Client struct {
 	TaskTimeout int
 }
 
-// VmRef - virtual machine ref parts
-// map[type:qemu node:proxmox1-xx id:qemu/132 diskread:5.57424738e+08 disk:0 netin:5.9297450593e+10 mem:3.3235968e+09 uptime:1.4567097e+07 vmid:132 template:0 maxcpu:2 netout:6.053310416e+09 maxdisk:3.4359738368e+10 maxmem:8.592031744e+09 diskwrite:1.49663619584e+12 status:running cpu:0.00386980694947209 name:appt-app1-dev.xxx.xx]
-type VmRef struct {
-	vmId    int
-	node    string
-	pool    string
-	vmType  string
-	haState string
-	haGroup string
-}
-
-func (vmr *VmRef) SetNode(node string) {
-	vmr.node = node
-}
-
-func (vmr *VmRef) SetPool(pool string) {
-	vmr.pool = pool
-}
-
-func (vmr *VmRef) SetVmType(vmType string) {
-	vmr.vmType = vmType
-}
-
-func (vmr *VmRef) GetVmType() string {
-	return vmr.vmType
-}
-
-func (vmr *VmRef) VmId() int {
-	return vmr.vmId
-}
-
-func (vmr *VmRef) Node() string {
-	return vmr.node
-}
-
-func (vmr *VmRef) Pool() string {
-	return vmr.pool
-}
-
-func (vmr *VmRef) HaState() string {
-	return vmr.haState
-}
-
-func (vmr *VmRef) HaGroup() string {
-	return vmr.haGroup
-}
-
-func (vmr *VmRef) nilCheck() error {
-	if vmr == nil {
-		return errors.New("vm reference may not be nil")
-	}
-	return nil
-}
-
-func NewVmRef(vmId int) (vmr *VmRef) {
-	vmr = &VmRef{vmId: vmId, node: "", vmType: ""}
-	return
-}
-
 func NewClient(apiUrl string, hclient *http.Client, http_headers string, tls *tls.Config, proxyString string, taskTimeout int) (client *Client, err error) {
 	var sess *Session
 	sess, err_s := NewSession(apiUrl, hclient, proxyString, tls)
@@ -176,13 +117,6 @@ func (c *Client) GetVmList() (map[string]interface{}, error) {
 	return map[string]interface{}{"data": list}, err
 }
 
-func (c *Client) CheckVmRef(vmr *VmRef) (err error) {
-	if vmr.node == "" || vmr.vmType == "" {
-		_, err = c.GetVmInfo(vmr)
-	}
-	return
-}
-
 func (c *Client) GetVmInfo(vmr *VmRef) (vmInfo map[string]interface{}, err error) {
 	vms, err := c.GetResourceList(resourceListGuest)
 	if err != nil {
@@ -245,7 +179,7 @@ func (c *Client) GetVmRefsByName(vmName string) (vmrs []*VmRef, err error) {
 }
 
 func (c *Client) GetVmState(vmr *VmRef) (vmState map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +187,7 @@ func (c *Client) GetVmState(vmr *VmRef) (vmState map[string]interface{}, err err
 }
 
 func (c *Client) GetVmConfig(vmr *VmRef) (vmConfig map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +195,7 @@ func (c *Client) GetVmConfig(vmr *VmRef) (vmConfig map[string]interface{}, err e
 }
 
 func (c *Client) GetStorageStatus(vmr *VmRef, storageName string) (storageStatus map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +213,7 @@ func (c *Client) GetStorageStatus(vmr *VmRef, storageName string) (storageStatus
 }
 
 func (c *Client) GetStorageContent(vmr *VmRef, storageName string) (data map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +229,7 @@ func (c *Client) GetStorageContent(vmr *VmRef, storageName string) (data map[str
 }
 
 func (c *Client) GetVmSpiceProxy(vmr *VmRef) (vmSpiceProxy map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +282,7 @@ func (c *Client) GetVmAgentNetworkInterfaces(vmr *VmRef) ([]AgentNetworkInterfac
 }
 
 func (c *Client) doAgentGet(vmr *VmRef, command string, output interface{}) error {
-	err := c.CheckVmRef(vmr)
+	err := vmr.Check(c)
 	if err != nil {
 		return err
 	}
@@ -363,7 +297,7 @@ func (c *Client) doAgentGet(vmr *VmRef, command string, output interface{}) erro
 }
 
 func (c *Client) CreateTemplate(vmr *VmRef) error {
-	err := c.CheckVmRef(vmr)
+	err := vmr.Check(c)
 	if err != nil {
 		return err
 	}
@@ -394,7 +328,7 @@ func (c *Client) CreateTemplate(vmr *VmRef) error {
 }
 
 func (c *Client) MonitorCmd(vmr *VmRef, command string) (monitorRes map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +343,7 @@ func (c *Client) MonitorCmd(vmr *VmRef, command string) (monitorRes map[string]i
 }
 
 func (c *Client) Sendkey(vmr *VmRef, qmKey string) error {
-	err := c.CheckVmRef(vmr)
+	err := vmr.Check(c)
 	if err != nil {
 		return err
 	}
@@ -469,7 +403,7 @@ func (c *Client) GetTaskExitstatus(taskUpid string) (exitStatus interface{}, err
 }
 
 func (c *Client) StatusChangeVm(vmr *VmRef, params map[string]interface{}, setStatus string) (exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return
 	}
@@ -521,7 +455,7 @@ func (c *Client) DeleteVm(vmr *VmRef) (exitStatus string, err error) {
 }
 
 func (c *Client) DeleteVmParams(vmr *VmRef, params map[string]interface{}) (exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return "", err
 	}
@@ -928,7 +862,7 @@ func (c *Client) DeleteVMDisks(
 
 // VzDump - Create backup
 func (c *Client) VzDump(vmr *VmRef, params map[string]interface{}) (exitStatus interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -950,7 +884,7 @@ func (c *Client) VzDump(vmr *VmRef, params map[string]interface{}) (exitStatus i
 
 // DeleteVolume - Delete volume
 func (c *Client) DeleteVolume(vmr *VmRef, storageName string, volumeName string) (exitStatus interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -971,7 +905,7 @@ func (c *Client) DeleteVolume(vmr *VmRef, storageName string, volumeName string)
 
 // CreateVNCProxy - Creates a TCP VNC proxy connections
 func (c *Client) CreateVNCProxy(vmr *VmRef, params map[string]interface{}) (vncProxyRes map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -994,7 +928,7 @@ func (c *Client) CreateVNCProxy(vmr *VmRef, params map[string]interface{}) (vncP
 
 // QemuAgentPing - Execute ping.
 func (c *Client) QemuAgentPing(vmr *VmRef) (pingRes map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1015,7 +949,7 @@ func (c *Client) QemuAgentPing(vmr *VmRef) (pingRes map[string]interface{}, err 
 
 // QemuAgentFileWrite - Writes the given file via guest agent.
 func (c *Client) QemuAgentFileWrite(vmr *VmRef, params map[string]interface{}) (err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return err
 	}
@@ -1027,7 +961,7 @@ func (c *Client) QemuAgentFileWrite(vmr *VmRef, params map[string]interface{}) (
 
 // QemuAgentSetUserPassword - Sets the password for the given user to the given password.
 func (c *Client) QemuAgentSetUserPassword(vmr *VmRef, params map[string]interface{}) (result map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1049,7 +983,7 @@ func (c *Client) QemuAgentSetUserPassword(vmr *VmRef, params map[string]interfac
 
 // QemuAgentExec - Executes the given command in the vm via the guest-agent and returns an object with the pid.
 func (c *Client) QemuAgentExec(vmr *VmRef, params map[string]interface{}) (result map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1071,7 +1005,7 @@ func (c *Client) QemuAgentExec(vmr *VmRef, params map[string]interface{}) (resul
 
 // GetExecStatus - Gets the status of the given pid started by the guest-agent
 func (c *Client) GetExecStatus(vmr *VmRef, pid string) (status map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1084,7 +1018,7 @@ func (c *Client) GetExecStatus(vmr *VmRef, pid string) (status map[string]interf
 
 // SetQemuFirewallOptions - Set Firewall options.
 func (c *Client) SetQemuFirewallOptions(vmr *VmRef, fwOptions map[string]interface{}) (exitStatus interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1106,7 +1040,7 @@ func (c *Client) SetQemuFirewallOptions(vmr *VmRef, fwOptions map[string]interfa
 
 // GetQemuFirewallOptions - Get VM firewall options.
 func (c *Client) GetQemuFirewallOptions(vmr *VmRef) (firewallOptions map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1124,7 +1058,7 @@ func (c *Client) GetQemuFirewallOptions(vmr *VmRef) (firewallOptions map[string]
 
 // CreateQemuIPSet - Create new IPSet
 func (c *Client) CreateQemuIPSet(vmr *VmRef, params map[string]interface{}) (exitStatus interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1146,7 +1080,7 @@ func (c *Client) CreateQemuIPSet(vmr *VmRef, params map[string]interface{}) (exi
 
 // AddQemuIPSet - Add IP or Network to IPSet.
 func (c *Client) AddQemuIPSet(vmr *VmRef, name string, params map[string]interface{}) (exitStatus interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1168,7 +1102,7 @@ func (c *Client) AddQemuIPSet(vmr *VmRef, name string, params map[string]interfa
 
 // GetQemuIPSet - List IPSets
 func (c *Client) GetQemuIPSet(vmr *VmRef) (ipsets map[string]interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1186,7 +1120,7 @@ func (c *Client) GetQemuIPSet(vmr *VmRef) (ipsets map[string]interface{}, err er
 
 // DeleteQemuIPSet - Delete IPSet
 func (c *Client) DeleteQemuIPSet(vmr *VmRef, IPSetName string) (exitStatus interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -1207,7 +1141,7 @@ func (c *Client) DeleteQemuIPSet(vmr *VmRef, IPSetName string) (exitStatus inter
 
 // DeleteQemuIPSetNetwork - Remove IP or Network from IPSet.
 func (c *Client) DeleteQemuIPSetNetwork(vmr *VmRef, IPSetName string, network string, params map[string]interface{}) (exitStatus interface{}, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,7 @@ var get_guestCmd = &cobra.Command{
 		id := cli.ValidateIntIDset(args, "GuestID")
 		vmr := proxmox.NewVmRef(id)
 		c := cli.NewClient()
-		err = c.CheckVmRef(vmr)
+		err = vmr.Check(c)
 		if err != nil {
 			return
 		}

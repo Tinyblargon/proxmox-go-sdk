@@ -10,7 +10,7 @@ import (
 )
 
 func ListSnapshots(c *Client, vmr *VmRef) (rawSnapshots, error) {
-	err := c.CheckVmRef(vmr)
+	err := vmr.Check(c)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (config ConfigSnapshot) mapToApi() map[string]interface{} {
 }
 
 func (config ConfigSnapshot) Create(c *Client, vmr *VmRef) (err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return
 	}
@@ -123,7 +123,7 @@ const (
 )
 
 func (snapshot SnapshotName) Delete(c *Client, vmr *VmRef) (exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return
 	}
@@ -135,7 +135,7 @@ func (snapshot SnapshotName) Delete(c *Client, vmr *VmRef) (exitStatus string, e
 }
 
 func (snapshot SnapshotName) Rollback(c *Client, vmr *VmRef) (exitStatus string, err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (snapshot SnapshotName) Rollback(c *Client, vmr *VmRef) (exitStatus string,
 
 // Can only be used to update the description of an already existing snapshot
 func (snapshot SnapshotName) Update(c *Client, vmr *VmRef, description string) (err error) {
-	err = c.CheckVmRef(vmr)
+	err = vmr.Check(c)
 	if err != nil {
 		return
 	}

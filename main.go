@@ -117,7 +117,7 @@ func main() {
 
 	case "getConfig":
 		vmr = proxmox.NewVmRef(vmid)
-		err := c.CheckVmRef(vmr)
+		err := vmr.Check(c)
 		failError(err)
 		vmType := vmr.GetVmType()
 		var config interface{}
@@ -134,7 +134,7 @@ func main() {
 		// TODO make getNetworkInterfaces in new cli
 	case "getNetworkInterfaces":
 		vmr = proxmox.NewVmRef(vmid)
-		err := c.CheckVmRef(vmr)
+		err := vmr.Check(c)
 		failError(err)
 		networkInterfaces, err := c.GetVmAgentNetworkInterfaces(vmr)
 		failError(err)
