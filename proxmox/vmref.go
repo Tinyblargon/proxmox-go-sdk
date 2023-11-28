@@ -18,6 +18,10 @@ type VmRef struct {
 	haGroup string
 }
 
+const (
+	VmRef_Error_Nil string = "vm reference may not be nil"
+)
+
 func (vmr *VmRef) Check(c *Client) (err error) {
 	if vmr.node == "" || vmr.vmType == "" {
 		_, err = c.GetVmInfo(vmr)
@@ -39,7 +43,7 @@ func (vmr *VmRef) HaState() string {
 
 func (vmr *VmRef) nilCheck() error {
 	if vmr == nil {
-		return errors.New("vm reference may not be nil")
+		return errors.New(VmRef_Error_Nil)
 	}
 	return nil
 }
