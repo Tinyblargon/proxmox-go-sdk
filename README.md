@@ -37,14 +37,6 @@ export PM_HTTP_HEADERS=Key,Value,Key1,Value1 (only if required)
 
 ./proxmox-api-go migrate 123 migrate-to-proxmox-node-name
 
-./proxmox-api-go createQemuSnapshot vm-name snapshot_name
-
-./proxmox-api-go deleteQemuSnapshot vm-name snapshot_name
-
-./proxmox-api-go listQemuSnapshot vm-name
-
-./proxmox-api-go rollbackQemu vm-name
-
 ./proxmox-api-go getResourceList
 
 ./proxmox-api-go getVmList
