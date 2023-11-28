@@ -23,6 +23,10 @@ const (
 )
 
 func (vmr *VmRef) Check(c *Client) (err error) {
+	err = vmr.nilCheck()
+	if err != nil {
+		return
+	}
 	if vmr.node == "" || vmr.vmType == "" {
 		_, err = c.GetVmInfo(vmr)
 	}
