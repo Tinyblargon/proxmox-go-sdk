@@ -413,7 +413,7 @@ func Test_UserID_Validate(t *testing.T) {
         },
         {name: "Invalid ID",
             input: UserID(0),
-            output: Errors.New(UserID_Error_Invalid),
+            output: errors.New(UserID_Error_Invalid),
         },
     }
     for _, test := range tests {
