@@ -467,6 +467,8 @@ func (ConfigQemu) mapToStruct(vmr *VmRef, params map[string]interface{}) (*Confi
 	// description:Base image
 	// cores:2 ostype:l26
 
+	var err error
+
 	config := ConfigQemu{}
 
 	if vmr != nil {
@@ -522,8 +524,10 @@ func (ConfigQemu) mapToStruct(vmr *VmRef, params map[string]interface{}) (*Confi
 	if _, isSet := params["hookscript"]; isSet {
 		config.Hookscript = params["hookscript"].(string)
 	}
-	if _, isSet := params["memory"]; isSet {
-		config.Memory = int(params["memory"].(float64))
+	if p, isSet := params["memory"]; isSet {
+		if config.Memory, err = toInt(p); err != nil {
+			return nil, err
+		}
 	}
 	if _, isSet := params["name"]; isSet {
 		config.Name = params["name"].(string)
