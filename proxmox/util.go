@@ -1,6 +1,7 @@
 package proxmox
 
 import (
+	"errors"
 	"log"
 	"regexp"
 	"strconv"
@@ -8,6 +9,8 @@ import (
 )
 
 var rxUserTokenExtract = regexp.MustCompile("[a-z0-9]+@[a-z0-9]+!([a-z0-9]+)")
+
+const TypeConversion_Error_int = "could not convert to int"
 
 func inArray(arr []string, str string) bool {
 	for _, elem := range arr {
@@ -237,4 +240,15 @@ func splitStringOfSettings(settings string) map[string]interface{} {
 		settingMap[keyValuePair[0]] = value
 	}
 	return settingMap
+}
+
+func toInt(param interface{}) (int, error) {
+	switch p := param.(type) {
+	case float64:
+		return int(p), nil
+	case string:
+		mem, err := strconv.ParseFloat(p, 64)
+		return int(mem), err
+	}
+	return 0, errors.New(TypeConversion_Error_int)
 }
