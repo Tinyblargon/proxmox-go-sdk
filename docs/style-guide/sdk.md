@@ -25,6 +25,7 @@ When this document refers to the SDK, it references the code in the [/proxmox](.
     - [Safe function](#safe-function)
     - [Unsafe function](#unsafe-function)
   - [Public and Private](#public-and-private)
+  - [Standardized Interfaces](#standardized-interfaces)
   - [Pure and Impure Functions](#pure-and-impure-functions)
     - [Pure Functions](#pure-functions)
     - [Impure Functions](#impure-functions)
@@ -328,6 +329,12 @@ Public functions should follow this guide as much as possible, to realize a homo
 
 It is important to note that every public function becomes a critical point of reliance for some software.
 As such, it is imperative to uphold backward compatibility when making changes. See [Versioning](#versioning) for more information.
+
+## Standardized Interfaces
+
+Standardized interfaces are key in software development for consistent functionality exposure. They enhance code understanding, usage, and system interoperability.
+
+If the Go standard library has an interface for existing functionality, use it. It's designed with best practices, well-documented, and tested. Ignoring it can lead to complexity and compatibility issues.
 
 ## Pure and Impure Functions
 
